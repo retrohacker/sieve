@@ -25,14 +25,14 @@ int main(int argc, char** argv) {
 }
 
 void identifyComposites(int **integers,size_t size,int threads) {
-  size_t i,last_prime;
+  size_t i;//,last_prime;
   // Since we don't handle even numbers, we multiple size*2. Since we don't
   // handle 1, we add 1.
   size_t loop_end=size*2;
   size_t seek=sizeof(int)*8;
-  loadBar(0,loop_end,loop_end,50);
+  //loadBar(0,loop_end,loop_end,50);
   for(i=3;i<loop_end;i+=2) {
-    loadBar(i,loop_end,100,50);
+    //loadBar(i,loop_end,100,50);
     // We need to check if i is prime. floor(i/2)-1 is the index of current bit.
     size_t bit=i/2-1,
            integer=bit/seek, //in array of integers
@@ -40,7 +40,7 @@ void identifyComposites(int **integers,size_t size,int threads) {
     // Check that bit is still 0
     if(!(((*integers)[integer]>>offset)&1U)) {
       //printf("%zu is prime\n",i);
-      last_prime=i; //keep track of highest prime number we have encountered
+      //last_prime=i; //keep track of highest prime number we have encountered
       // Set all factors of i > i^2 to 1
       // All factors if i < i^2 are handled by other primes
       // Ignore multiples of 2.
@@ -54,7 +54,7 @@ void identifyComposites(int **integers,size_t size,int threads) {
       }
     }
   }
-  printf("The highest prime number we computed was: %zu\n",last_prime);
+  //printf("The highest prime number we computed was: %zu\n",last_prime);
 }
 
 void allocateMemory(int **integers,size_t *size) {
@@ -76,9 +76,9 @@ void allocateMemory(int **integers,size_t *size) {
   *size=(*size==0)?array_bytes*8:*size;
 
   //Print out statistics about our array
-  printf("Available System Memory: %zu bits\n",available_memory*8);
-  printf("Creating array of %zu bits\n",int_array_len*sizeof(int));
-  printf("Exploring values in range [%zu,%zu]\n",(size_t)1,*size*2+2);
+  //printf("Available System Memory: %zu bits\n",available_memory*8);
+  //printf("Creating array of %zu bits\n",int_array_len*sizeof(int));
+  //printf("Exploring values in range [%zu,%zu]\n",(size_t)1,*size*2+2);
 
 }
 
