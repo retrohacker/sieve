@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <omp.h>
 
 // Use MEM_FRAC_NUMERATOR / MEM_FRAC_DENOMINATOR worth of total RAM
 #define MEM_FRAC_NUMERATOR 1
@@ -30,22 +31,31 @@ void identifyComposites(int **integers,size_t size,int threads) {
   // handle 1, we add 1.
   size_t loop_end=size*2;
   size_t seek=sizeof(int)*8;
+  size_t jstart;
+  bool prime;
   //loadBar(0,loop_end,loop_end,50);
-  for(i=3;i<loop_end;i+=2) {
-    //loadBar(i,loop_end,100,50);
-    // We need to check if i is prime. floor(i/2)-1 is the index of current bit.
-    size_t bit=i/2-1,
-           integer=bit/seek, //in array of integers
-           offset=bit%seek;  //in bit of integer
-    // Check that bit is still 0
-    if(!(((*integers)[integer]>>offset)&1U)) {
-      //printf("%zu is prime\n",i);
-      //last_prime=i; //keep track of highest prime number we have encountered
-      // Set all factors of i > i^2 to 1
-      // All factors if i < i^2 are handled by other primes
-      // Ignore multiples of 2.
-      size_t jstart = (i*i%2==0)?i*i+i:i*i;
-# pragma omp parallel for num_threads(threads) schedule(static)
+# pragma omp parallel num_threads(threads)
+  for(i=3;i<loop_end;) {
+    if(omp_get_thread_num()==0) {
+      //loadBar(i,loop_end,100,50);
+      // We need to check if i is prime. floor(i/2)-1 is the index of current bit.
+      size_t bit=i/2-1,
+             integer=bit/seek, //in array of integers
+             offset=bit%seek;  //in bit of integer
+      // Check that bit is still 0
+      prime=false;
+      if(!(((*integers)[integer]>>offset)&1U)) {
+        //last_prime=i; //keep track of highest prime number we have encountered
+        // Set all factors of i > i^2 to 1
+        // All factors if i < i^2 are handled by other primes
+        // Ignore multiples of 2.
+        jstart = (i*i%2==0)?i*i+i:i*i;
+        prime = true;
+      }
+    }
+# pragma omp barrier
+    if(prime) {
+# pragma omp for schedule(static)
       for(size_t j=jstart;j<loop_end;j+=i*2) {
         size_t jbit=j/2-1,
                jinteger=jbit/seek, //in array of integers
@@ -53,6 +63,10 @@ void identifyComposites(int **integers,size_t size,int threads) {
         (*integers)[jinteger]|=1U<<joffset;
       }
     }
+    if(omp_get_thread_num()==0) {
+      i+=2;
+    }
+# pragma omp barrier
   }
   //printf("The highest prime number we computed was: %zu\n",last_prime);
 }
